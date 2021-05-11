@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My Account | E-Shopper</title>
+</head><!--/head-->
+
+<body>
+	<%- include("header") %>
+	<section id="form"><!--form-->
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-4">
+					<div class="signup-form"><!--sign up form-->
+						<h2>New User Signup!</h2>
+						<form action="signup">
+							<input type="text" name="name" placeholder="Name" value="<%=name%>"/>
+							<input type="email" name="email" placeholder="Email Address" value="<%=email%>"/>
+							<input type="text" name="phone" placeholder="Mobile Number" value="<%=phone%>"/>
+							<input type="password" name="password" placeholder="Password" value="<%=password%>"/>
+							<button type="submit" class="btn btn-default">Signup</button>
+						</form>
+					</div><!--/sign up form-->
+				</div>
+			</div>
+		</div>
+	</section><!--/form-->
+	<%- include("footer") %>
+</body>
+</html>
