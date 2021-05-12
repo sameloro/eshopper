@@ -87,7 +87,7 @@ exports.DBUtils = class {
     constructor(uri) {
         try{
             this.db=null;
-            //console.log(uri);
+            console.log(uri);
             this.client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
             //this.client.connect();
             
