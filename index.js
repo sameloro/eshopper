@@ -86,40 +86,49 @@ app.use(function(req, res, next) {
 
 
 app.get("/", async (req, res) =>{
-    const MongoClient = require('mongodb').MongoClient;
-    const uri = "mongodb+srv://shopper:shopper123@eshopper.bzn0n.mongodb.net/eshopper?retryWrites=true&w=majority";
-    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-    client.connect(err => {
-        const collection = client.db("eshopper").collection("products");
-        console.log(" perform actions on the collection object");
-        client.close();
-    });
-
     var grids = await shopper.getProducts(600);
     var categories = await shopper.getCategories();
     var brands = await shopper.getBrands();
-    var id = (req.session && req.session.customer_id)?req.session.customer_id:null;
-    //console.log("S.ID="+req.sessionID+" : index customer id: "+id);
-    res.render("index", {
-        grids: grids,
-        categories: categories,
-        brands: brands,
-        customer_id: id
-    });
+
+    Promise.allSettled([grids, categories, brands]).then((values) => {
+
+        //values.forEach((result) => console.log(result));
+
+        var id = (req.session && req.session.customer_id)?req.session.customer_id:null;
+        //console.log("S.ID="+req.sessionID+" : index customer id: "+id);
+        res.render("index", {
+            grids: values[0]?values[0].value:'',
+            categories: values[1]?values[1].value:'',
+            brands: values[2]?values[2].value:'',
+            customer_id: id
+        });
+    }).catch(error => {
+          console.error(error.message)
+    })
+    
 });
 
 app.get("/index", async (req, res) =>{
     var grids = await shopper.getProducts(600);
     var categories = await shopper.getCategories();
     var brands = await shopper.getBrands();
-    var id = (req.session && req.session.customer_id)?req.session.customer_id:null;
-    //console.log("S.ID="+req.sessionID+" : index customer id: "+id);
-    res.render("index", {
-        grids: grids,
-        categories: categories,
-        brands: brands,
-        customer_id: id
-    });
+
+    Promise.allSettled([grids, categories, brands]).then((values) => {
+
+        //values.forEach((result) => console.log(result));
+
+        var id = (req.session && req.session.customer_id)?req.session.customer_id:null;
+        //console.log("S.ID="+req.sessionID+" : index customer id: "+id);
+        res.render("index", {
+            grids: values[0]?values[0].value:'',
+            categories: values[1]?values[1].value:'',
+            brands: values[2]?values[2].value:'',
+            customer_id: id
+        });
+    }).catch(error => {
+          console.error(error.message)
+    })
+    
 });
 
 app.get("/login", (req, res) => {
@@ -133,8 +142,9 @@ app.get("/logout", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-    var signup = await auth.customerRegistration(req);
-    res.render("login");
+    await auth.customerRegistration(req, async signup => {
+        res.render("login");
+    });
 });
 
 app.get("/login_admin", (req, res) => {
@@ -142,56 +152,60 @@ app.get("/login_admin", (req, res) => {
 });
 
 app.post("/signup_admin", async (req) => {
-    var signup = await auth.adminRegistration(req);
-    res.render("login_admin");
+    await auth.adminRegistration(req, async signup => {
+        res.render("login_admin");
+    });
 });
 
 app.post("/signin", async (req, res) => {
-    var doc = await auth.customerLogin(req);
-    if(!utils.isEmpty(doc)){
-        req.session.customer_id = doc._id;
-        res.redirect("/");
-    }else{
-        res.redirect("login");
-    }
-
+    await auth.customerLogin(req, doc => {
+        if(!utils.isEmpty(doc)){
+            req.session.customer_id = doc._id;
+            res.redirect("/");
+        }else{
+            res.redirect("login");
+        }
+    });
 });
 
 app.post("/signin_admin", async (req, res) => {
-    var doc = await auth.customerLogin(req);
-    if(!utils.isEmpty(doc)){
-        req.session.admin_id = doc._id;
-        res.redirect("/admin");
-    }else{
-        res.redirect("/login_admin");
-    }
+    await auth.customerLogin(req, doc => {
+        if(!utils.isEmpty(doc)){
+            req.session.admin_id = doc._id;
+            res.redirect("/admin");
+        }else{
+            res.redirect("/login_admin");
+        }
+    });
 });
 
 app.get("/myaccount", async (req, res) => {
-    var doc = await auth.myaccount(req, res);
-    //console.log(doc);
-    if(doc){
-        res.render("myaccount", {
-            name: doc["user-data"].name,
-            email: doc["user-data"].email,
-            password: doc["user-data"].password,
-            phone: doc["user-data"].phone,
-            customer_id: req.session.customer_id
-        });
-    }
+    await auth.myaccount(req, res, async doc => {
+        //console.log(doc);
+        if(doc){
+            res.render("myaccount", {
+                name: doc["user-data"].name,
+                email: doc["user-data"].email,
+                password: doc["user-data"].password,
+                phone: doc["user-data"].phone,
+                customer_id: req.session.customer_id
+            });
+        }
+    });
 });
 
 app.get("/admin", async (req, res) => {
-    var doc = await auth.admin(req)
-    if(doc){
-        res.render("admin", {
-            name: doc["user-data"].name,
-            email: doc["user-data"].email,
-            password: doc["user-data"].password,
-            phone: doc["user-data"].phone,
-            admin_id: req.session.admin_id
-        });
-    }
+    await auth.admin(req, async doc => {
+        if(doc){
+            res.render("admin", {
+                name: doc["user-data"].name,
+                email: doc["user-data"].email,
+                password: doc["user-data"].password,
+                phone: doc["user-data"].phone,
+                admin_id: req.session.admin_id
+            });
+        }
+    });
 });
 
 app.get("/4-0-4", (req, res) => {
@@ -239,9 +253,9 @@ app.get("/add-product", (req, res) => {
 });
 
 app.post("/saveproduct", (req, res) => {
-    
-    shopper.addProduct(req, res);
-    
+    shopper.addProduct(req, res, async res => {
+        res.render("addproduct");
+    });
 });
 
 app.listen(process.env.PORT, () => {
