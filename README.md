@@ -9,12 +9,12 @@
 EShopper is a Proof of Concept of Data driven application, where No-SQL data base MongoDB is used with nodejs. In this POC, CRUD (Create, Read, Update and Delete) operations on document database has been performed. Other web technologies are used such as HTML, CSS, JavaScript, JQuery, Bootstrap API.
 The code is deployed on Github repository with public access, and hosted application on Heroku node server. Database is deployed on mongodb cloud (Atlas). Heroku server is connected to Git repository and CLI commands used to commit and deploy changes.
 The POC made on a ecommerce solution, where major focus was on adding/updating products and displaying it to home page, i.e. to end customers. There are other functionalities too handled such as admin and user registration and login. Filter options, with limited functionalities. It also covered deletion of product and user records. 
-### Screenshot
+### Logo
 ![Image text](https://erashopper.herokuapp.com/home/logo.png)
 ## Technologies
 ***
 A list of technologies used within the project:
-* [Technology name](Node JS): Version 14.x 
+* [Technology name](Node JS): Version 14.15.5 
 * [Technology name](MondoDB): Version 4.4
 * [Library name](jQuery): Version 3.6.0
 * [Library name](Bootstrap): Version 3.0.3
