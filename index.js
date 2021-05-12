@@ -1,6 +1,7 @@
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
+require('dotenv').config();
 
 var bodyParser = require('body-parser');
 var shopper = require('./js/shoppers');
@@ -18,7 +19,7 @@ let redisClient = redis.createClient();
 */
 const app = express();
 //const router = express.Router();
-const port =20000;
+//const port =20000;
 
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname,"images")));
@@ -85,6 +86,15 @@ app.use(function(req, res, next) {
 
 
 app.get("/", async (req, res) =>{
+    const MongoClient = require('mongodb').MongoClient;
+    const uri = "mongodb+srv://shopper:shopper123@eshopper.bzn0n.mongodb.net/eshopper?retryWrites=true&w=majority";
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    client.connect(err => {
+        const collection = client.db("eshopper").collection("products");
+        console.log(" perform actions on the collection object");
+        client.close();
+    });
+
     var grids = await shopper.getProducts(600);
     var categories = await shopper.getCategories();
     var brands = await shopper.getBrands();
@@ -234,6 +244,6 @@ app.post("/saveproduct", (req, res) => {
     
 });
 
-app.listen(port, () => {
-    console.log(`Example app listining at http://localhost:${port}`);
+app.listen(process.env.PORT, () => {
+    console.log(`Example app listining at http://localhost:${process.env.PORT}`);
 })
