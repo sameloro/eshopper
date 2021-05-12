@@ -8,7 +8,7 @@ var formidable = require('formidable');
 const { body,validationResult } = require('express-validator');
 const utils = require("./utils")
 
-exports.myaccount = async function(req, res){
+exports.myaccount = async function(req, res, callback){
     var db;
     try{
         var id = req.session.customer_id;
@@ -19,26 +19,24 @@ exports.myaccount = async function(req, res){
         console.log("customer id: "+jsonData);
         var json = JSON.parse(jsonData);
         db = new utils.DBUtils(utils.uri);
-        var doc = await db.getAllData(utils.DBUtils.customerTable, json, {limit: 1}, {});
-        if(doc){
-            console.log("Login Successful !!!");
-            var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
-            return _doc;
-        }else{
-            console.log("Login Failed !!!");
-        }
+        await db.getAllData(utils.DBUtils.customerTable, json, {limit: 1}, {}, async doc => {
+            if(doc){
+                console.log("Login Successful !!!");
+                var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
+                callback(_doc);
+                return;
+            }else{
+                console.log("Login Failed !!!");
+            }
+        });
         
     }catch(error){
         console.log(error);
-    }finally{
-        if(db){
-            db.close();
-        }
     }
     return null;
 }
 
-exports.admin = async function(req){
+exports.admin = async function(req, callback){
     var db;
     try{
         var sess = req.session;
@@ -46,27 +44,25 @@ exports.admin = async function(req){
         db = new utils.DBUtils(utils.uri);
         var jsonData = "{\"_id\":\""+id+"\"}";
         var json = JSON.parse(jsonData);
-        var doc = await db.getAllData(utils.DBUtils.adminTable, json, {limit: 1}, {});
-        if(!utils.isEmpty(doc)){
-            console.log("Login Successful !!!");
-            var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
-            return _doc;
-        }else{
-            console.log("Login Failed !!!");
-        }
+        await db.getAllData(utils.DBUtils.adminTable, json, {limit: 1}, {}, async doc => {
+            if(!utils.isEmpty(doc)){
+                console.log("Login Successful !!!");
+                var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
+                callback(_doc);
+                return;
+            }else{
+                console.log("Login Failed !!!");
+            }
+        });
         
     }catch(error){
         console.log(error);
-    }finally{
-        if(db){
-            db.close();
-        }
     }
     return null;
 }
 
 
-exports.customerLogin = async function(req){
+exports.customerLogin = async function(req, callback){
     var db;
     try{
         var userData = "";
@@ -80,28 +76,26 @@ exports.customerLogin = async function(req){
             db = new utils.DBUtils(utils.uri);
             var jsonData = "{"+userData+"}";
             var json = JSON.parse(jsonData);
-            //console.log("customerlogin: "+jsonData);
-            var doc = await db.getAllData(utils.DBUtils.customerTable, json, {limit: 1}, {"_id":1});
-            //console.log("result: "+JSON.stringify(doc));
-            if(!utils.isEmpty(doc)){
-                console.log("Login Successful !!!");
-                var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
-                return _doc;
-            }else{
-                console.log("Login Failed !!!");
-            }
+            console.log("customerlogin: "+jsonData);
+            await db.getAllData(utils.DBUtils.customerTable, json, {limit: 1}, {"_id":1}, doc=> {
+                console.log("result: "+JSON.stringify(doc));
+                if(!utils.isEmpty(doc)){
+                    console.log("Login Successful !!!");
+                    var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
+                    callback(_doc);
+                    return;
+                }else{
+                    console.log("Login Failed !!!");
+                }
+            });
         }
     }catch(error){
         console.log(error);
-    }finally{
-        if(db){
-            db.close();
-        }
     }
     return null;
 }
 
-exports.adminLogin = async function(req){
+exports.adminLogin = async function(req, callback){
     var db;
     try{
         var userData = "";
@@ -116,27 +110,25 @@ exports.adminLogin = async function(req){
             var jsonData = "{"+userData+"}";
             var json = JSON.parse(jsonData);
             //console.log("adminlogin: "+jsonData);
-            var doc = await db.getAllData(utils.DBUtils.adminTable, json, {limit: 1}, {"_id":1});
-            //console.log("result: "+JSON.stringify(doc));
-            if(!utils.isEmpty(doc)){
-                console.log("Login Successful !!!");
-                var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
-                return _doc;
-            }else{
-                console.log("Login Failed !!!");
-            }
+            var doc = await db.getAllData(utils.DBUtils.adminTable, json, {limit: 1}, {"_id":1}, doc=> {
+                console.log("result: "+JSON.stringify(doc));
+                if(!utils.isEmpty(doc)){
+                    console.log("Login Successful !!!");
+                    var _doc = utils.isArray(doc)?doc.length>0?doc[0]:null:doc;
+                    callback(_doc);
+                    return;
+                }else{
+                    console.log("Login Failed !!!");
+                }
+            });
         }
     }catch(error){
         console.log(error);
-    }finally{
-        if(db){
-            db.close();
-        }
     }
     return null;
 }
 
-exports.customerRegistration = async function(req){
+exports.customerRegistration = async function(req, callback){
     var db;
     try{
         var hexDatetime = Date.now().toString(16);
@@ -148,30 +140,27 @@ exports.customerRegistration = async function(req){
         userData = (userData?"\"user-data\":{"+userData+"}":"");
         if(userData){
             var jsonData = "{\"_id\":\""+hexDatetime+"\","+userData+"}";
-            //console.log(jsonData);
+            console.log(jsonData);
             db = new utils.DBUtils(utils.uri);
             var json = JSON.parse(jsonData);
             var email = json["user-data"].email;
-            var reqJson = JSON.parse("{\"email\":\""+email+"\"}");
-            var count = await db.countRecords(utils.DBUtils.customerTable, reqJson, {});
-            if( count == 0){
-                var isInserted = await db.storeData(utils.DBUtils.customerTable, jsonData);
-                return isInserted;
-            }else{
-                return false;
-            }
-            
+            var reqJson = JSON.parse("{\"user-data.email\":\""+email+"\"}");
+            await db.countRecords(utils.DBUtils.customerTable, reqJson, {}, async countBack => {
+                console.log("count: "+countBack);
+                if( countBack == 0){
+                    db = new utils.DBUtils(utils.uri);
+                    var isInserted = await db.storeData(utils.DBUtils.customerTable, jsonData);
+                    callback(isInserted);
+                    return;
+                }
+            });
         }
     }catch(error){
         console.log(error);
-    }finally{
-        if(db){
-            db.close();
-        }
     }
 }
 
-exports.adminRegistration = async function(req){
+exports.adminRegistration = async function(req, callback){
     var db;
     try{
         var hexDatetime = Date.now().toString(16);
@@ -188,20 +177,18 @@ exports.adminRegistration = async function(req){
             var json = JSON.parse(jsonData);
             var email = json["user-data"].email;
             var reqJson = JSON.parse("{\"email\":\""+email+"\"}");
-            var count = await db.countRecords(utils.DBUtils.adminTable, reqJson, {});
-            if( count == 0){
-                var isInserted = await db.storeData(utils.DBUtils.adminTable, jsonData);
-                return isInserted;
-            }else{
-                return false;
-            }
+            var count = await db.countRecords(utils.DBUtils.adminTable, reqJson, {}, async countBack => {
+                console.log("count: "+countBack);
+                if( countBack == 0){
+                    db = new utils.DBUtils(utils.uri);
+                    var isInserted = await db.storeData(utils.DBUtils.adminTable, jsonData);
+                    callback(isInserted);
+                    return;
+                }
+            });
             
         }
     }catch(error){
         console.log(error);
-    }finally{
-        if(db){
-            db.close();
-        }
     }
 }

@@ -5,9 +5,8 @@ var formidable = require('formidable');
 const { body,validationResult } = require('express-validator');
 const utils = require("./utils")
 
-var skip = 0;
 
-exports.addProduct = function(req, res){
+exports.addProduct = function(req, res, callback){
     (req, res, next) => {
         // Extract the validation errors from a request.
         const errors = validationResult(req);
@@ -21,8 +20,6 @@ exports.addProduct = function(req, res){
             console.log("Valid")
         }
     }
-
-
     //upload files
     var formData = new formidable.IncomingForm();
     formData.parse(req, async function (error, fields, files) {
@@ -40,7 +37,7 @@ exports.addProduct = function(req, res){
                     var newPath = "images/products/" + nameWithoutExt+"_"+hexDatetime + extension;
                     var ismainImage = key == 'mainImage';
                     fileArray += (fileArray?",":"")+"{\"image\":\""+newPath+"\",\"main-image\":"+ismainImage+"}";
-                    htmlData += `<p>value for ${key} is ${newPath}</p>`;
+                    //htmlData += `<p>value for ${key} is ${newPath}</p>`;
                     fs.rename(file.path, newPath, function (errorRename) {
                         //console.log("File saved = " + newPath);
                     });
@@ -52,160 +49,158 @@ exports.addProduct = function(req, res){
             for (var key in fields) {
                 let value = fields[key];
                 fieldJson += (fieldJson?",":"")+"\""+key+"\":\""+value+"\"";
-                htmlData += `<p>value for ${key} is ${value}</p>`;
+                //htmlData += `<p>value for ${key} is ${value}</p>`;
             }
             var _data = "\"fields\":{"+fieldJson+"}"+(fileArray?",":"")+fileArray;
             if(_data){
                 var jsonData = "{\"_id\":\""+hexDatetime+"\","+_data+"}";
                 //console.log(jsonData);
                 db = new utils.DBUtils(utils.uri);
-                await db.storeData(utils.DBUtils.productTable, jsonData);
-                var count = await db.countRecords(utils.DBUtils.productTable,'{}');
-                htmlData += `<p>Total documents in products collection : ${count}.</p>`
+                await db.storeData(utils.DBUtils.productTable, jsonData, async result => {
+                    //var count = await db.countRecords(utils.DBUtils.productTable,'{}');
+                    //htmlData += `<p>Total documents in products collection : ${count}.</p>`
+                    callback(result);
+                    return;
+                });
             }
-            res.send(htmlData);
+            //res.send(htmlData);
         }catch(error){
             console.log("ERROR: "+error)
-        }finally{
-            if(db){
-                db.close();
-            }
         }
     });
 }
 
 exports.getCategories = async function(){
-    
-    var db = null;
-    try{
-        db = new utils.DBUtils(utils.uri);
-        var query = `[
-            { 
-                "$match": {
-                    "fields.category": { 
-                        "$exists": true, 
-                        "$ne": null,
-                        "$ne": "" 
-                    }
-                }    
-            },
-            { 
-                "$group": {
-                    "_id": "$fields.category", 
-                    "subcategories": { 
-                        "$push": {
-                            "$cond":[
-                                {"$ne": ["$fields.subcategory", ""]},
-                                "$fields.subcategory",
-                                null
-                            ]
+    return new Promise((resolve, reject) => {
+        var db = null;
+        try{
+            db = new utils.DBUtils(utils.uri);
+            var query = `[
+                { 
+                    "$match": {
+                        "fields.category": { 
+                            "$exists": true, 
+                            "$ne": null,
+                            "$ne": "" 
                         }
-                    },
-                    "count": { 
-                        "$sum": 1
+                    }    
+                },
+                { 
+                    "$group": {
+                        "_id": "$fields.category", 
+                        "subcategories": { 
+                            "$push": {
+                                "$cond":[
+                                    {"$ne": ["$fields.subcategory", ""]},
+                                    "$fields.subcategory",
+                                    null
+                                ]
+                            }
+                        },
+                        "count": { 
+                            "$sum": 1
+                        }
+                    }   
+                },
+                {
+                    "$sort": {
+                        "subcategories" : -1,
+                        "_id": 1
                     }
-                }   
-            },
-            {
-                "$sort": {
-                    "subcategories" : -1,
-                    "_id": 1
-                }
-            }  
-        ]`;
+                }  
+            ]`;
 
-        var jsondata = await db.getAllDataAggregate(utils.DBUtils.productTable, query);
-        var grid ='';
-        for (i in jsondata){
-            var doc = jsondata[i];
-            grid += createCategoryGrid(doc);
-            //console.log("catagories: "+ doc);
+            db.getAllDataAggregate(utils.DBUtils.productTable, query, async result => {
+                var grid ='';
+                for (i in result){
+                    var doc = result[i];
+                    grid += createCategoryGrid(doc);
+                    //console.log("catagories: "+ doc);
+                }
+                resolve(grid);
+                return;
+            });
+        
+        }catch(error){
+            console.log("getCategory: "+error)
         }
-        return grid;
-    }catch(error){
-        console.log("getCategory: "+error)
-    }finally{
-        if(db){
-            db.close();
-        }
-    }
+    });
 }
 
 exports.getBrands = async function(){
-    var db = null;
-    try{
-        db = new utils.DBUtils(utils.uri);
-        var query = `[
-            { 
-                "$match": {
-                    "fields.brand": { 
-                        "$exists": true, 
-                        "$ne": null,
-                        "$ne": "" 
+    return new Promise((resolve, reject) => {
+        var db = null;
+        try{
+            db = new utils.DBUtils(utils.uri);
+            var query = `[
+                { 
+                    "$match": {
+                        "fields.brand": { 
+                            "$exists": true, 
+                            "$ne": null,
+                            "$ne": "" 
+                        }
+                    }    
+                },
+                { 
+                    "$group": {
+                        "_id": "$fields.brand",
+                        "count": { 
+                            "$sum": 1 
+                        }
+                    }   
+                },
+                {
+                    "$sort": {
+                        "count" : -1
                     }
-                }    
-            },
-            { 
-                "$group": {
-                    "_id": "$fields.brand",
-                    "count": { 
-                        "$sum": 1 
-                    }
-                }   
-            },
-            {
-                "$sort": {
-                    "count" : -1
-                }
-            }        
-        ]`;
+                }        
+            ]`;
 
-        var jsondata = await db.getAllDataAggregate(utils.DBUtils.productTable, query);
-        var grid ='';
-        for (i in jsondata){
-            var doc = jsondata[i];
-            grid += `<li><a href="#"> <span class="pull-right">(${doc.count})</span>${doc._id}</a></li>`;
-            //console.log("Brands: "+ doc);
+            db.getAllDataAggregate(utils.DBUtils.productTable, query, result => {
+                var grid ='';
+                for (i in result){
+                    var doc = result[i];
+                    grid += `<li><a href="#"> <span class="pull-right">(${doc.count})</span>${doc._id}</a></li>`;
+                    //console.log("Brands: "+ JSON.stringify(doc));
+                }
+                resolve(grid);
+                return;
+            });
+            
+        }catch(error){
+            console.log("getCategory: "+error)
         }
-        return grid;
-    }catch(error){
-        console.log("getCategory: "+error)
-    }finally{
-        if(db){
-            db.close();
-        }
-    }
+    });
 }
 
 module.exports.getProducts = async function(limit, pagination){
-    var db = null;
-    try{
-        pagination = pagination?pagination<2?0:pagination:0;
-        var skip = limit * pagination;
-        db = new utils.DBUtils(utils.uri);
-        var count = await db.countRecords(utils.DBUtils.productTable, {}, {"_id":1});
-        console.log("("+count+" >= "+skip+") = "+(count >= skip));
-        if(count >= skip){
-            var jsondata = await db.getAllData(utils.DBUtils.productTable, {}, {limit: limit, skip: skip}, {"fields.name":1,"fields.price":1,"images":1});
-            //console.log(jsondata);
-            var grids = '';
-            for(var i in jsondata){
-                var doc = jsondata[i];
-                grids += createProductGrid(doc);
-            }
-            
-            return grids;
+    return new Promise((resolve, reject) => {
+        var db = null;
+        try{
+            pagination = pagination?pagination<2?0:pagination:0;
+            var skip = limit * pagination;
+            db = new utils.DBUtils(utils.uri);
+            db.countRecords(utils.DBUtils.productTable, {}, {"_id":1}, async count => {
+                //console.log("("+count+" >= "+skip+") = "+(count >= skip));
+                if(count >= skip){
+                    db = new utils.DBUtils(utils.uri);
+                    await db.getAllData(utils.DBUtils.productTable, {}, {limit: limit, skip: skip}, {"fields.name":1,"fields.price":1,"images":1}, async result => {
+                        //console.log(result);
+                        var grids = '';
+                        for(var i in result){
+                            var doc = result[i];
+                            grids += createProductGrid(doc);
+                        }
+                        resolve(grids);
+                        return;
+                    });
+                }
+            });  
+        }catch(error){
+            console.log("Get Product Error:"+error);
         }
-        //$("div.features_items").append(grids);
-            
-    }catch(error){
-        console.log("Get Product Error:"+error);
-    }finally{
-        if(db){
-            db.close();
-        }
-    }
-    return '';
+    });
 }
 
 var createProductGrid = function(doc){
