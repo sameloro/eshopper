@@ -7,10 +7,10 @@ require('dotenv').config();
 /**
  * constants
  */
-exports.uri = process.env.DB_PROTOCOL+"://"+process.env.DB_USERNAME+":"+process.env.DB_PASSWORD+"@"+process.env.DB_DOMAIN+"/"+process.env.DB_NAME+"?retryWrites=true&w=majority";
+//exports.uri = process.env.DB_PROTOCOL+"://"+process.env.DB_USERNAME+":"+process.env.DB_PASSWORD+"@"+process.env.DB_DOMAIN+"/"+process.env.DB_NAME+"?retryWrites=true&w=majority";
 //exports.uri = "mongodb://localhost:27017/eshopper";
-//exports.uri = "mongodb+srv://admin:admin123@eshopper.bzn0n.mongodb.net/eshopper?retryWrites=true&w=majority";
-//exports.uri = "mongodb+srv://admin:admin123@eshopper.bzn0n.mongodb.net/eshopper";
+exports.uri = "mongodb+srv://admin:admin123@eshopper.bzn0n.mongodb.net/eshopper?retryWrites=true&w=majority";
+
 
 exports.isObject = function (obj)
 {
