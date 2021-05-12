@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add Product | Admin</title>
+</head><!--/head-->
+
+<body>
+<%- include("header") %>
+	<section id="cart_items">
+		<div class="container">
+			<div class="breadcrumbs">
+				<ol class="breadcrumb">
+				  <li><a href="#">Admin</a></li>
+				  <li class="active">Add Product</li>
+				</ol>
+			</div><!--/breadcrums-->
+		<form action="/saveproduct" id="saveproduct" method="POST" enctype="multipart/form-data">
+			<div class="step-one">
+				<h2 class="heading">Add Product</h2>
+			</div>
+			<div class="checkout-options">
+				<h3>Controls</h3>
+				<p>Merchandising options</p>
+				<ul class="nav">
+					<li>
+						<label><input type="checkbox" name="displayable"> Displayable </label>
+					</li>
+					<li>
+						<label><input type="checkbox" name="saleable"> Saleable</label>
+					</li>
+					<li>
+						<label><input type="checkbox" name="preorder"> Allow Pre-order </label>
+					</li>
+					<li>
+						<a href=""><i class="fa fa-times"></i>Cancel</a>
+					</li>
+				</ul>
+			</div><!--/checkout-options-->
+
+			<div class="register-req">
+				<p>Add products to your online shop.</p>
+			</div><!--/register-req-->
+
+			<div class="shopper-informations">
+				<div class="row">
+					<div class="col-sm-3">
+						<div class="shopper-info form-three">
+							<p>Product Information</p>
+					
+								<input type="text" name="name" placeholder="Display Name">
+								<select id="brand" name="brand" class="withOther">
+									<option>-- Brand --</option>
+									<option> Other Brand</option>
+								</select>
+								<input type="text" id="brand_other" name="brand" placeholder="Brand" hidden />
+
+								<select id="category" name="category" class="withOther">
+									<option>-- Category --</option>
+									<option>Other Category</option>
+								</select>
+								<input type="text" id="category_other" name="category" placeholder="Category" hidden />
+								<select id="subcategory" name="subcategory" class="withOther">
+									<option>-- Sub Category --</option>
+									<option>Other Sub Category</option>
+								</select>
+								<input type="text" id="subcategory_other" name="subcategory" placeholder=" Sub Category" hidden />
+								<p>Delivery Options</p>
+								<select id="delivery" name="Delivery" multiple>
+									<option>Click and Collect</option>
+									<option>Home Delivery</option>
+									<option>International Delivery</option>
+								</select>
+							
+								<input type="text" placeholder="Price" name="price" class="numeric_only" pattern="[0-9]{1,5}">
+						
+							<a class="btn btn-primary" id="reset"> Reset </a>
+							<a class="btn btn-primary" id="submit">  Save  </a>
+						</div>
+					</div>
+					<div class="col-sm-5 clearfix">
+						<div class="bill-to">
+							<p>Product Images</p>
+							<div class="form-one">
+								
+									<input type="file" accept="image/*" name="mainImage" class="btn-file-upload" value="Main Image*"/>
+									<input type="file" accept="image/*" name="productImage1" class="btn-file-upload" value="Upload Image"/>
+									<input type="file" accept="image/*" name="productImage2" class="btn-file-upload" value="Upload Image"/>
+									<input type="file" accept="image/*" name="productImage3" class="btn-file-upload" value="Upload Image"/>
+									<input type="file" accept="image/*" name="productImage4" class="btn-file-upload" value="Upload Image"/>
+									<input type="file" accept="image/*" name="productImage5" class="btn-file-upload" value="Upload Image"/>
+									<input type="file" accept="image/*" name="productImage6" class="btn-file-upload" value="Upload Image"/>
+									
+							
+							</div>
+							<div class="form-two">
+								<p>Stock Info</p>
+								
+									<input type="text" name="numberOfStock" placeholder="Number of stock">
+									<p>Available From</p>
+									<input type="date" name="availableFrom" placeholder="Available From">
+									<p>Available Till</p>
+									<input type="date" name="availableTill" placeholder="Available Till">
+									<p>Pre-order Date</p>
+									<input type="date" name="preorderDate" placeholder="Pre Order Date">
+									
+								
+							</div>
+						</div>
+					</div>
+					<div class="col-sm-4">
+						<div class="order-message">
+							<p>Product Description</p>
+							<textarea name="message" name="description"  placeholder="Product description in maximum 500 charachters." rows="10" maxlength="500"></textarea>
+							<p>Promotions</p>
+							<select multiple>
+								<option value="sash_new">Banner - New</option>
+								<option value="sash_sale">Banner - Sale</option>
+								<option value="discount_5per">Discount - 5% Off</option>
+								<option value="discount_2GBP">Discount - £2 Off</option>
+							</select>
+						</div>	
+					</div>					
+				</div>
+			</div>
+			<br />
+		</form>
+		</div>
+	</section> <!--/#cart_items-->
+
+	<%- include("footer") %>
+</body>
+</html>
