@@ -253,7 +253,7 @@ app.get("/add-product", (req, res) => {
 });
 
 app.post("/saveproduct", (req, res) => {
-    shopper.addProduct(req, res, async res => {
+    shopper.addProduct(req, res, async result => {
         res.render("addproduct");
     });
 });
